@@ -5,8 +5,8 @@ from datetime import datetime
 from notion.client import NotionClient
 
 PATH_POCKET_FILE = "ril_export.html"
-NOTION_TOKEN = "918be98b6ed238713209c761b1611d133ac2fcf5368e80fc7d0dd240de677ac2cfede6f2ba58c33915b72c2997106ef117b80e439be8a9386307625074ff8db1ef1f8f8f040f4d4d13d7699590ef"
-NOTION_TABLE_ID = "https://www.notion.so/personaljeff/939537deaef5443bab2f7552fa3cd234?v=789809f8c63d4a5c9d4a6c0852e7db11"
+NOTION_TOKEN = 
+NOTION_TABLE_ID = "https://www.notion.so/personaljeff/e4a0751a114842c6b2b238218e52e7d2?v=062127a6aa4341fb98e6d74b0eadfc4c"
 
 class PocketListItem:
     title = ""
@@ -58,9 +58,9 @@ def itemAlreadyExists(item):
         index += 1
         print(f"Checking for {eachItem.url}")
         if item.url == eachItem.url:
-            print(True)
+            # print(True)
             return True
-    print(False)
+    # print(False)
     return False
 
 def addToNotion():
@@ -80,12 +80,12 @@ def addToNotion():
         # row.addedOn = eachItem.addedOn
         row.read = eachItem.readStatus
     #     print(f'{eachItem.tags}\n{eachItem.addedOn}')
-    print(f"{index}/{len(allPocketListItems)} added")
+    # print(f"{index}/{len(allPocketListItems)} added")
 
 print("Retreiving all items from Pocket")
 allPocketListItems = retrieveAllPocketItems()
-# retrieveAllPocketItems()
-print("Retreival done")
-print("Inserting items as table entries in Notion database")
-addToNotion()
+# retrieveAllPocketItems
+# print("Retreival done")
+# print("Inserting items as table entries in Notion database")
+# addToNotion()
 print("Transfer successfully completed")
