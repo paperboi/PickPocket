@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from notion.client import NotionClient
 
-PATH_POCKET_FILE = "ril_export.html"
+PATH_POCKET_FILE = "ril_export_2.html"
 NOTION_TOKEN = 
 NOTION_TABLE_ID = "https://www.notion.so/personaljeff/e4a0751a114842c6b2b238218e52e7d2?v=062127a6aa4341fb98e6d74b0eadfc4c"
 
