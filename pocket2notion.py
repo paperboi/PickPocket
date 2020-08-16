@@ -6,8 +6,9 @@ from notion.client import NotionClient
 from notion.collection import NotionDate
 
 PATH_POCKET_FILE = "ril_export.html"
-NOTION_TOKEN = "918be98b6ed238713209c761b1611d133ac2fcf5368e80fc7d0dd240de677ac2cfede6f2ba58c33915b72c2997106ef117b80e439be8a9386307625074ff8db1ef1f8f8f040f4d4d13d7699590ef"
-NOTION_TABLE_ID = "https://www.notion.so/personaljeff/0d2936c3aff9494db2fae6f8707a75d8?v=f282486e54904f95a6d12518a6e76b59"
+
+NOTION_TOKEN = ""
+NOTION_TABLE_ID = ""
 
 client = NotionClient(token_v2=NOTION_TOKEN)
 cv = client.get_collection_view(NOTION_TABLE_ID)
