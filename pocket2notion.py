@@ -3,16 +3,17 @@ import time
 
 from datetime import datetime
 from notion.client import NotionClient
+from notion.collection import NotionDate
 
-PATH_POCKET_FILE = "ril_export_2.html"
-NOTION_TOKEN = 
-NOTION_TABLE_ID = "https://www.notion.so/personaljeff/e4a0751a114842c6b2b238218e52e7d2?v=062127a6aa4341fb98e6d74b0eadfc4c"
+PATH_POCKET_FILE = "ril_export.html"
+NOTION_TOKEN = """
+NOTION_TABLE_ID = "https://www.notion.so/personaljeff/0d2936c3aff9494db2fae6f8707a75d8?v=f282486e54904f95a6d12518a6e76b59"
 
 class PocketListItem:
     title = ""
     url = ""
     tags = []
-    addedOn = ""
+    addedOn = 0
     readStatus = None
 
     def __init__(self, title, url, tags, addedOn, readStatus):
@@ -34,7 +35,7 @@ def retrieveAllPocketItems():
         title = eachItem.get_text()
         url = eachItem['href']
         tags = eachItem['tags'].split(',')
-        addedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(eachItem['time_added'])))
+        addedOn = int(eachItem['time_added'])
         readStatus = False
         eachPocketListItemData = PocketListItem(title,url,tags,addedOn,readStatus)
         allPocketListItems.append(eachPocketListItemData)
@@ -45,8 +46,7 @@ def retrieveAllPocketItems():
         title = eachItem.get_text()
         url = eachItem['href']
         tags = eachItem['tags'].split(',')
-        addedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(eachItem['time_added'])))
-        # print(eachItem['time_added'])
+        addedOn = int(eachItem['time_added'])
         readStatus = True
         eachPocketListItemData = PocketListItem(title,url,tags,addedOn,readStatus)
         allPocketListItems.append(eachPocketListItemData)
@@ -58,34 +58,122 @@ def itemAlreadyExists(item):
         index += 1
         print(f"Checking for {eachItem.url}")
         if item.url == eachItem.url:
-            # print(True)
+            print(True)
             return True
-    # print(False)
+    print(False)
     return False
+
+
+# FIX THIS FUNCTION 16-08-20 1:11 AM
+from random import choice
+from uuid import uuid1, uuid4
+from pprintpp import pprint as pp
+
+colors = ['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
+
+def addNewTag(cv, schema, prop, tag):
+    # print(f'Tags for this = {tags}')
+    # if tags == ['']:
+    #     print('Sent back')
+    #     return []
+    # collection_schema = cv.collection.get("schema")
+    # prop = next(
+    #     (v for k, v in collection_schema.items() if v["name"] == 'Tags'), None
+    # )
+    # if "options" not in prop: prop["options"] = []
+    # pp(prop)
+
+    dupe = next(
+        (o for o in prop["options"] if o["value"] == tag), None
+    )
+    if dupe:
+        raise ValueError(f'{tag} already exists in the schema!')
+
+    prop["options"].append(
+        {"id": str(uuid1()), "value": tag, "color": choice(colors)}
+    )
+    try:
+        cv.collection.set("schema", schema)
+    except (RecursionError, UnicodeEncodeError):
+        pass
+
+def setTag(page, cv, prop, new_values):
+    schema = cv.collection.get("schema")
+    new_values_set = set(new_values)
+    # print(f'Tags for this = {tags}')
+    if new_values == ['']:
+        print('Sent back')
+        return []
+    prop = next(
+        (v for k, v in schema.items() if v["name"] == 'Tags'), None
+    )
+    if "options" not in prop: prop["options"] = []
+
+    pp(prop)
+    current_options_set = set(
+        [o["value"] for o in prop["options"]]
+    )
+    intersection = new_values_set.intersection(current_options_set)
+    if len(new_values_set) > len(intersection):
+        difference = [v for v in new_values_set if v not in intersection]
+        for d in difference:
+            addNewTag(cv, schema, prop, d)
+    page.set_property(prop, new_values)
+
+    # rowTags = []
+    # for eachTag in tags:
+    #     prop['options'].append(
+    #         {
+    #             'color' : choice(colors),
+    #             'id' : str(uuid1()),
+    #             'value' : eachTag,                       
+    #         }
+    #     )
+    #     # for eachOption in prop['options']:
+    #     #     if eachOption['value'] == eachTag:
+    # rowTags.append(prop['options'])
+    # print(f'Row tags = {rowTags}')
+    # row.set_property(
+    #     'tags',
+    #     {
+    #         'name': 'Tags',
+    #         'options': rowTags,
+    #         'type': 'multi_select',
+    #     })
+    # return rowTags
 
 def addToNotion():
     client = NotionClient(token_v2=NOTION_TOKEN)
     cv = client.get_collection_view(NOTION_TABLE_ID)
+    print(cv.parent.views)
 
     index = 0
     for index, eachItem in enumerate(allPocketListItems):
-        if itemAlreadyExists(eachItem):
-            continue
+        # if itemAlreadyExists(eachItem):
+        #     continue
         index += 1
         row = cv.collection.add_row()
-        print(row.get_property(vars))
+        print(row.schema)
         row.title = eachItem.title
         row.url = eachItem.url
         # row.tags = eachItem.tags
-        # row.addedOn = eachItem.addedOn
+        # updateMultiSelectOptions(eachItem.tags, cv)
+        # setTags(eachItem.tags, cv, row).
+        for eachTag in eachItem.tags:
+            setTag(row, cv, 'prop', eachTag)
+        # pp(eachItem.addedOn)
+        row.added_on = NotionDate(datetime.fromtimestamp(eachItem.addedOn))
+        pp(row.added_on)
         row.read = eachItem.readStatus
+        if index == 10:
+            break
     #     print(f'{eachItem.tags}\n{eachItem.addedOn}')
-    # print(f"{index}/{len(allPocketListItems)} added")
+    print(f"{index}/{len(allPocketListItems)} added")
 
 print("Retreiving all items from Pocket")
 allPocketListItems = retrieveAllPocketItems()
-# retrieveAllPocketItems
-# print("Retreival done")
-# print("Inserting items as table entries in Notion database")
-# addToNotion()
+# retrieveAllPocketItems()
+print("Retreival done")
+print("Inserting items as table entries in Notion database")
+addToNotion()
 print("Transfer successfully completed")
