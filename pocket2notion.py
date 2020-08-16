@@ -9,6 +9,10 @@ PATH_POCKET_FILE = "ril_export.html"
 NOTION_TOKEN = "918be98b6ed238713209c761b1611d133ac2fcf5368e80fc7d0dd240de677ac2cfede6f2ba58c33915b72c2997106ef117b80e439be8a9386307625074ff8db1ef1f8f8f040f4d4d13d7699590ef"
 NOTION_TABLE_ID = "https://www.notion.so/personaljeff/0d2936c3aff9494db2fae6f8707a75d8?v=f282486e54904f95a6d12518a6e76b59"
 
+client = NotionClient(token_v2=NOTION_TOKEN)
+cv = client.get_collection_view(NOTION_TABLE_ID)
+print(cv.parent.views)
+
 class PocketListItem:
     title = ""
     url = ""
@@ -52,16 +56,16 @@ def retrieveAllPocketItems():
         allPocketListItems.append(eachPocketListItemData)
     return allPocketListItems    
 
-# def itemAlreadyExists(item):
-#     index = 0
-#     for index, eachItem in enumerate(allPocketListItems):
-#         index += 1
-#         print(f"Checking for {eachItem.url}")
-#         if item.url == eachItem.url:
-#             print(True)
-#             return True
-#     print(False)
-#     return False
+def itemAlreadyExists(item):
+    index = 0
+    for index, eachItem in enumerate(allPocketListItems):
+        index += 1
+        # print(f"Checking for {eachItem.url}")
+        if item.url == eachItem.url:
+            # print(True)
+            return True
+    # print(False)
+    return False
 
 from random import choice
 from uuid import uuid1, uuid4
@@ -89,7 +93,6 @@ def setTag(page, cv, prop, new_values):
     new_values_set = set(new_values)
 
     if new_values == ['']:
-        print('Sent back')
         return []
 
     prop = next(
@@ -111,23 +114,19 @@ def setTag(page, cv, prop, new_values):
     page.set_property('Tags', new_values)
 
 def addToNotion():
-    client = NotionClient(token_v2=NOTION_TOKEN)
-    cv = client.get_collection_view(NOTION_TABLE_ID)
-    print(cv.parent.views)
-
     index = 0
     for index, eachItem in enumerate(allPocketListItems):
-        # if itemAlreadyExists(eachItem):
-        #     continue
+        if itemAlreadyExists(eachItem):
+            continue
         index += 1
         row = cv.collection.add_row()
-        print(row.schema)
         row.title = eachItem.title
         row.url = eachItem.url
         setTag(row, cv, 'prop', eachItem.tags)
         row.added_on = NotionDate(datetime.fromtimestamp(eachItem.addedOn))
         pp(row.added_on)
         row.read = eachItem.readStatus
+        # print(row.get_rows)
     print(f"{index}/{len(allPocketListItems)} added")
 
 print("Retreiving all items from Pocket")
