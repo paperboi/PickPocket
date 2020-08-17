@@ -1,18 +1,15 @@
 from bs4 import BeautifulSoup
-import time
+
+from random import choice
+from uuid import uuid1
 
 from datetime import datetime
 from notion.client import NotionClient
 from notion.collection import NotionDate
 
-PATH_POCKET_FILE = "ril_export.html"
-
+PATH_POCKET_FILE = ""
 NOTION_TOKEN = ""
 NOTION_TABLE_ID = ""
-
-client = NotionClient(token_v2=NOTION_TOKEN)
-cv = client.get_collection_view(NOTION_TABLE_ID)
-print(cv.parent.views)
 
 class PocketListItem:
     title = ""
@@ -63,14 +60,8 @@ def itemAlreadyExists(item):
         index += 1
         # print(f"Checking for {eachItem.url}")
         if item.url == eachItem.url:
-            # print(True)
             return True
-    # print(False)
     return False
-
-from random import choice
-from uuid import uuid1, uuid4
-from pprintpp import pprint as pp
 
 colors = ['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
 
@@ -102,7 +93,6 @@ def setTag(page, cv, prop, new_values):
 
     if "options" not in prop: prop["options"] = []
 
-    pp(prop)
     current_options_set = set(
         [o["value"] for o in prop["options"]]
     )
@@ -125,14 +115,19 @@ def addToNotion():
         row.url = eachItem.url
         setTag(row, cv, 'prop', eachItem.tags)
         row.added_on = NotionDate(datetime.fromtimestamp(eachItem.addedOn))
-        pp(row.added_on)
         row.read = eachItem.readStatus
-        # print(row.get_rows)
     print(f"{index}/{len(allPocketListItems)} added")
+
+
+client = NotionClient(token_v2= NOTION_TOKEN)
+cv = client.get_collection_view(NOTION_TABLE_ID)
+print(cv.parent.views)
 
 print("Retreiving all items from Pocket")
 allPocketListItems = retrieveAllPocketItems()
 print("Retreival done")
 print("Inserting items as table entries in Notion database")
 addToNotion()
+print(cv.collection.get('rows'))
+
 print("Transfer successfully completed")
