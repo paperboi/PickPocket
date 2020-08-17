@@ -8,8 +8,6 @@
     <a href="https://github.com/paperboi/PickPocket">Explore the docs</a>
     ·
     <a href="https://github.com/paperboi/PickPocket/issues">File issues and feature requests here</a>
-    ·
-    <a href="https://github.com/paperboi/PickPocket/issues">Request Feature</a>
   </p>
 </p>
 
