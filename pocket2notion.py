@@ -1,4 +1,3 @@
-from config import PATH_POCKET_FILE, NOTION_TABLE_ID, NOTION_TOKEN
 from fetchTitleFromURL import fetchTitleFromURL
 from bs4 import BeautifulSoup
 
@@ -9,13 +8,17 @@ from datetime import datetime
 from notion.client import NotionClient
 from notion.collection import NotionDate
 
+PATH_POCKET_FILE = ""
+NOTION_TOKEN = ""
+NOTION_TABLE_ID = ""
+
 class PocketListItem:
     title = ""
     url = ""
     tags = []
     addedOn = 0
     readStatus = None
-
+    
     def __init__(self, title, url, tags, addedOn, readStatus):
         self.title = title
         self.url = url
