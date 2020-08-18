@@ -1,3 +1,5 @@
+from config import PATH_POCKET_FILE, NOTION_TABLE_ID, NOTION_TOKEN
+from fetchTitleFromURL import fetchTitleFromURL
 from bs4 import BeautifulSoup
 
 from random import choice
@@ -6,10 +8,6 @@ from uuid import uuid1
 from datetime import datetime
 from notion.client import NotionClient
 from notion.collection import NotionDate
-
-PATH_POCKET_FILE = ""
-NOTION_TOKEN = ""
-NOTION_TABLE_ID = ""
 
 class PocketListItem:
     title = ""
@@ -34,8 +32,9 @@ def retrieveAllPocketItems():
     # Retrieving the items from the user's Pocket List first.
     articles = itemList.find_all_previous("a")
     for eachItem in articles:
-        title = eachItem.get_text()
         url = eachItem['href']
+        title = eachItem.get_text()
+        # title = fetchTitleFromURL(url)
         tags = eachItem['tags'].split(',')
         addedOn = int(eachItem['time_added'])
         readStatus = False
@@ -45,8 +44,9 @@ def retrieveAllPocketItems():
     # Retreiving the items from the user's Archive list next.
     articles = itemList.find_all_next("a")
     for eachItem in articles:
-        title = eachItem.get_text()
         url = eachItem['href']
+        title = eachItem.get_text()
+        # title = fetchTitleFromURL(url)
         tags = eachItem['tags'].split(',')
         addedOn = int(eachItem['time_added'])
         readStatus = True
@@ -55,12 +55,10 @@ def retrieveAllPocketItems():
     return allPocketListItems    
 
 def itemAlreadyExists(item):
-    index = 0
-    for index, eachItem in enumerate(allPocketListItems):
-        index += 1
-        # print(f"Checking for {eachItem.url}")
-        if item.url == eachItem.url:
+    for eachRow in cv.collection.get_rows():
+        if item.url == eachRow.url:
             return True
+    print(f"Adding {item.url} to the list")
     return False
 
 colors = ['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
@@ -111,7 +109,7 @@ def addToNotion():
             continue
         index += 1
         row = cv.collection.add_row()
-        row.title = eachItem.title
+        row.title = fetchTitleFromURL(eachItem.url) if eachItem.title == eachItem.url else eachItem.title
         row.url = eachItem.url
         setTag(row, cv, 'prop', eachItem.tags)
         row.added_on = NotionDate(datetime.fromtimestamp(eachItem.addedOn))
@@ -128,6 +126,4 @@ allPocketListItems = retrieveAllPocketItems()
 print("Retreival done")
 print("Inserting items as table entries in Notion database")
 addToNotion()
-print(cv.collection.get('rows'))
-
 print("Transfer successfully completed")
