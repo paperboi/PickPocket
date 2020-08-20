@@ -69,7 +69,7 @@ To get a local copy up and running follow these simple steps.
 3. Since this code requires access of non-public pages, an authentication token from your Notion page is required. This token is stored in the `token_v2` cookie. This can be found in the *Storage* tab of your browser's developer tools.
    - For Chrome: Open Developer Tools (*Menu > Other tools > Developer Tools*), navigate to Application tab and go to *Storage\Cookies* to find the token.
 4. Store the path to your HTML file, the address to your database and the `token_v2` value as `PATH_POCKET_FILE`, `NOTION_TABLE_ID` and `NOTION_TOKEN` respectively in a `.env` file in the same directory you have cloned this repository to. 
-To execute the script, navigate to the directory and run
+5. To execute the script, navigate to the directory and run
    ```
    python pocket2notion.py
   ```
