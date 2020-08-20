@@ -1,5 +1,7 @@
-from fetchTitleFromURL import fetchTitleFromURL
+import requests
+from time import sleep
 from bs4 import BeautifulSoup
+from settings import PATH_POCKET_FILE, NOTION_TOKEN, NOTION_TABLE_ID
 
 from random import choice
 from uuid import uuid1
@@ -7,10 +9,6 @@ from uuid import uuid1
 from datetime import datetime
 from notion.client import NotionClient
 from notion.collection import NotionDate
-
-PATH_POCKET_FILE = ""
-NOTION_TOKEN = ""
-NOTION_TABLE_ID = ""
 
 class PocketListItem:
     title = ""
@@ -25,108 +23,109 @@ class PocketListItem:
         self.tags = tags
         self.addedOn = addedOn
         self.readStatus = readStatus
+        if self.title == self.url:
+            self._fetchTitleFromURL()
+        self._addToNotion()
+    
+    def _fetchTitleFromURL(self):
+        r = requests.get(self.url)
+        sleep(1)
+        soup = BeautifulSoup(r.content, 'lxml')
+        self.title = soup.select_one('title').text
+    
+    def _addToNotion(self):
+        row = cv.collection.add_row()
+        row.title = self.title
+        row.url = self.url
+        self._setTag(row, 'prop', self.tags)
+        row.added_on = NotionDate(datetime.fromtimestamp(self.addedOn))
+        row.read = self.readStatus
+        # print(f"{index}/{len(allPocketListItems)} added")
+
+    def _addNewTag(self, schema, prop, tag):
+        dupe = next(
+            (o for o in prop["options"] if o["value"] == tag), None
+        )
+        if dupe:
+            raise ValueError(f'{tag} already exists in the schema!')
+
+        prop["options"].append(
+            {"id": str(uuid1()), "value": tag, "color": choice(colors)}
+        )
+        try:
+            cv.collection.set("schema", schema)
+        except (RecursionError, UnicodeEncodeError):
+            pass
+
+    def _setTag(self, page, prop, new_values):
+        schema = cv.collection.get("schema")
+        new_values_set = set(new_values)
+
+        if new_values == ['']:
+            return []
+
+        prop = next(
+            (v for k, v in schema.items() if v["name"] == 'Tags'), None
+        )
+
+        if "options" not in prop: prop["options"] = []
+
+        current_options_set = set(
+            [o["value"] for o in prop["options"]]
+        )
+        intersection = new_values_set.intersection(current_options_set)
+
+        if len(new_values_set) > len(intersection):
+            difference = [v for v in new_values_set if v not in intersection]
+            for d in difference:
+                self._addNewTag(schema, prop, d)    
+        page.set_property('Tags', new_values)
+
+def itemAlreadyExists(itemURL):
+    global allRows
+    if allRows == []:
+        return False
+    for eachRow in allRows:
+        if itemURL == eachRow.url:
+            return True
+    print(f"Adding {itemURL} to the list")
+    return False
 
 def retrieveAllPocketItems():
     with open(PATH_POCKET_FILE, encoding='utf8', errors='ignore') as fp:
         soup = BeautifulSoup(fp,'html.parser')
-    allPocketListItems = []
     itemList = soup.h1.find_next("h1")
 
-    # Retrieving the items from the user's Pocket List first.
     articles = itemList.find_all_previous("a")
     for eachItem in articles:
+        if itemAlreadyExists(eachItem['href']):
+            continue
         url = eachItem['href']
         title = eachItem.get_text()
-        # title = fetchTitleFromURL(url)
         tags = eachItem['tags'].split(',')
         addedOn = int(eachItem['time_added'])
         readStatus = False
-        eachPocketListItemData = PocketListItem(title,url,tags,addedOn,readStatus)
-        allPocketListItems.append(eachPocketListItemData)
+        PocketListItem(title,url,tags,addedOn,readStatus)
 
     # Retreiving the items from the user's Archive list next.
     articles = itemList.find_all_next("a")
     for eachItem in articles:
+        if itemAlreadyExists(eachItem['href']):
+            continue
         url = eachItem['href']
         title = eachItem.get_text()
-        # title = fetchTitleFromURL(url)
         tags = eachItem['tags'].split(',')
         addedOn = int(eachItem['time_added'])
         readStatus = True
-        eachPocketListItemData = PocketListItem(title,url,tags,addedOn,readStatus)
-        allPocketListItems.append(eachPocketListItemData)
-    return allPocketListItems    
-
-def itemAlreadyExists(item):
-    for eachRow in cv.collection.get_rows():
-        if item.url == eachRow.url:
-            return True
-    print(f"Adding {item.url} to the list")
-    return False
+        PocketListItem(title,url,tags,addedOn,readStatus)
 
 colors = ['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
 
-def addNewTag(cv, schema, prop, tag):
-    dupe = next(
-        (o for o in prop["options"] if o["value"] == tag), None
-    )
-    if dupe:
-        raise ValueError(f'{tag} already exists in the schema!')
-
-    prop["options"].append(
-        {"id": str(uuid1()), "value": tag, "color": choice(colors)}
-    )
-    try:
-        cv.collection.set("schema", schema)
-    except (RecursionError, UnicodeEncodeError):
-        pass
-
-def setTag(page, cv, prop, new_values):
-    schema = cv.collection.get("schema")
-    new_values_set = set(new_values)
-
-    if new_values == ['']:
-        return []
-
-    prop = next(
-        (v for k, v in schema.items() if v["name"] == 'Tags'), None
-    )
-
-    if "options" not in prop: prop["options"] = []
-
-    current_options_set = set(
-        [o["value"] for o in prop["options"]]
-    )
-    intersection = new_values_set.intersection(current_options_set)
-
-    if len(new_values_set) > len(intersection):
-        difference = [v for v in new_values_set if v not in intersection]
-        for d in difference:
-            addNewTag(cv, schema, prop, d)    
-    page.set_property('Tags', new_values)
-
-def addToNotion():
-    index = 0
-    for index, eachItem in enumerate(allPocketListItems):
-        if itemAlreadyExists(eachItem):
-            continue
-        index += 1
-        row = cv.collection.add_row()
-        row.title = fetchTitleFromURL(eachItem.url) if eachItem.title == eachItem.url else eachItem.title
-        row.url = eachItem.url
-        setTag(row, cv, 'prop', eachItem.tags)
-        row.added_on = NotionDate(datetime.fromtimestamp(eachItem.addedOn))
-        row.read = eachItem.readStatus
-    print(f"{index}/{len(allPocketListItems)} added")
-
-
 client = NotionClient(token_v2= NOTION_TOKEN)
 cv = client.get_collection_view(NOTION_TABLE_ID)
+allRows = cv.collection.get_rows()
+
 print(cv.parent.views)
 
-print("Retreiving all items from Pocket")
-allPocketListItems = retrieveAllPocketItems()
-print("Retreival done")
-print("Inserting items as table entries in Notion database")
-addToNotion()
+retrieveAllPocketItems()
 print("Transfer successfully completed")

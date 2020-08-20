@@ -64,15 +64,14 @@ To get a local copy up and running follow these simple steps.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-1. Export your Pocket saves from [here](https://help.getpocket.com/article/1015-exporting-your-pocket-list). Assign the path to this file to the variable `PATH_POCKET_FILE` in [pocket2notion.py](https://github.com/paperboi/PickPocket/blob/master/pocket2notion.py).
-1. Duplicate this [database template](https://www.notion.so/personaljeff/e4a0751a114842c6b2b238218e52e7d2?v=062127a6aa4341fb98e6d74b0eadfc4c) to your Notion workspace. Copy-paste the database address to the `NOTION_TABLE_ID` variable in [pocket2notion.py](https://github.com/paperboi/PickPocket/blob/master/pocket2notion.py)
-2. Since this code requires access of non-public pages, an authentication token from your Notion page is required. This token is stored in the `token_v2` cookie. This can be found in the *Storage* tab of your browser's developer tools.
+1. Export your Pocket saves from [here](https://help.getpocket.com/article/1015-exporting-your-pocket-list).
+2. Duplicate this [database template](https://www.notion.so/personaljeff/e4a0751a114842c6b2b238218e52e7d2?v=062127a6aa4341fb98e6d74b0eadfc4c) to your Notion workspace. Copy-paste the database address to the  variable.
+3. Since this code requires access of non-public pages, an authentication token from your Notion page is required. This token is stored in the `token_v2` cookie. This can be found in the *Storage* tab of your browser's developer tools.
    - For Chrome: Open Developer Tools (*Menu > Other tools > Developer Tools*), navigate to Application tab and go to *Storage\Cookies* to find the token.
-   - Assign this `token_v2` value to the `NOTION_TOKEN` variable in [pocket2notion.py](https://github.com/paperboi/PickPocket/blob/master/pocket2notion.py).
-
-To use the script, navigate to the directory and run
+4. Store the path to your HTML file, the address to your database and the `token_v2` value as `PATH_POCKET_FILE`, `NOTION_TABLE_ID` and `NOTION_TOKEN` respectively in a `.env` file in the same directory you have cloned this repository to. 
+To execute the script, navigate to the directory and run
    ```
-   python pocket2notion.py 
+   python pocket2notion.py
   ```
 
 <!-- ROADMAP -->

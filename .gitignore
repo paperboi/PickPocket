@@ -1,1 +1,4 @@
 config.py
+.env
+*__pycache__
+*.html
