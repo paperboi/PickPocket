@@ -70,9 +70,9 @@ To get a local copy up and running follow these simple steps.
    - For Chrome: Open Developer Tools (*Menu > Other tools > Developer Tools*), navigate to Application tab and go to *Storage\Cookies* to find the token.
 4. Store the path to your HTML file, the address to your database and the `token_v2` value as `PATH_POCKET_FILE`, `NOTION_TABLE_ID` and `NOTION_TOKEN` respectively in a `.env` file in the same directory you have cloned this repository to. 
 5. To execute the script, navigate to the directory and run
-   ```
+   ```sh
    python pocket2notion.py
-  ```
+   ```
 
 <!-- ROADMAP -->
 ## Roadmap
